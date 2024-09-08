@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+import os
+import socket
+from contextlib import contextmanager
+from pathlib import Path
+from typing import List
+
+
+CERTBOT_DOMAIN = os.environ["CERTBOT_DOMAIN"]
+
+
+class HaproxyRuntimeAPIClient:
+
+    @property
+    def address(self) -> tuple[str, int]:
+        return os.environ.get("HAPROXY_CONTAINER", "haproxy"), os.environ.get("HAPROXY_PORT", 9999)
+
+    @contextmanager
+    def connection(self):
+        s = socket.create_connection(self.address)
+
+        try:
+            yield s
+        finally:
+            s.close()
+
+    def send(self, request: str) -> List[str]:
+        with self.connection() as conn:
+            conn.sendall(f"{request}\n".encode())
+            return conn.recv(1024).decode().strip().split("\n")
+
+    def get_certs(self):
+        return self.send("show ssl cert")[1:]
+
+    def add_cert(self, cert_path: str, cert: str):
+        """Add a new cert to haproxy."""
+
+        print(self.send(f"new ssl cert {cert_path}"))
+        print(self.send(f"set ssl cert {cert_path} <<\n{cert}"))
+        print(self.send(f"commit ssl cert {cert_path}"))
+
+    def add_cert_to_list(self, list_name: str, cert_path: str, domain: str):
+        """Add a cert to a list."""
+
+        self.send(
+            f"add ssl crt-list {list_name} <<\n{cert_path} [alpn h2] {domain}\n"
+        )
+
+    def del_cert_from_list(self, list_name: str, cert_path: str):
+        """Delete a cert from a list."""
+
+        self.send(f"del ssl crt-list {list_name} {cert_path}")
+
+    def del_cert(self, name: str):
+        """Delete a cert from haproxy."""
+
+        self.send(f"del ssl cert {name}")
+
+    def show_ssl_crt_list(self, list_name: str | None = None):
+        return self.send(f"show ssl crt-list{f" {list_name}" if list_name else ""}")
+
+
+def combine_certs(cert_folder: Path) -> str:
+    """Combine certbot fullchain.pem and privkey.pem into a single text."""
+
+    result = ""
+
+    for file in ["fullchain.pem", "privkey.pem"]:
+        with open(cert_folder.joinpath(file), "r") as f:
+            result += f.read()
+
+    return result
+
+
+def main() -> None:
+    """Main function."""
+
+    haproxy = HaproxyRuntimeAPIClient()
+
+    cert_folder = Path(f"/etc/letsencrypt/live", CERTBOT_DOMAIN)
+    cert_path = cert_folder.joinpath("haproxy.pem")
+    combined_cert = combine_certs(cert_folder)
+
+    with open(cert_path, "w") as f:
+        f.write(combined_cert)
+
+    for crt_list_name in haproxy.show_ssl_crt_list():
+        crt_list = haproxy.show_ssl_crt_list(crt_list_name)
+
+        crt_list_data = ""
+
+        for cert in crt_list:
+            if cert.startswith(str(cert_path)):
+                runtime_cert_path = cert_folder.joinpath("haproxy.runtime.pem")
+
+                haproxy.add_cert(str(runtime_cert_path), combined_cert)
+                haproxy.add_cert_to_list(crt_list_name, str(runtime_cert_path), CERTBOT_DOMAIN)
+
+                crt_list_data += f"{cert_path}\n"
+            else:
+                crt_list_data += f"{cert}\n"
+
+        if crt_list != crt_list_data:
+            with open(crt_list_name, "w") as f:
+                f.write(crt_list_data)
+
+    print("Done!")
+
+
+if __name__ == "__main__":
+    main()
