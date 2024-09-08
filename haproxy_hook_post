@@ -7,6 +7,7 @@ from typing import List
 
 
 CERTBOT_DOMAIN = os.environ["CERTBOT_DOMAIN"]
+DUMMY_CERT_PATH = "/etc/letsencrypt/dummy.pem"
 
 
 class HaproxyRuntimeAPIClient:
@@ -90,7 +91,7 @@ def main() -> None:
         crt_list_data = ""
 
         for cert in crt_list:
-            if cert.startswith(str(cert_path)):
+            if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
                 runtime_cert_path = cert_folder.joinpath("haproxy.runtime.pem")
 
                 haproxy.add_cert(str(runtime_cert_path), combined_cert)

@@ -29,6 +29,9 @@ frontend https
     ...
 ```
 
+If you don't have a cert container is building one on entrypoint.
+It's located at `/etc/letsencrypt/dummy.pem` and you can use it in your haproxy configuration.
+
 Example `docker-compose.yml`:
 
 ```yaml
