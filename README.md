@@ -44,7 +44,7 @@ services:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 
   certbot:
-    image: ghcr.io/yurzs/certbot/certbot:master
+    image: ghcr.io/yurzs/certbot:master
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
       - ./crts:/usr/local/etc/haproxy/crts
