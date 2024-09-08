@@ -87,7 +87,7 @@ def main() -> None:
         f.write(combined_cert)
 
     for crt_list_name in haproxy.show_ssl_crt_list():
-        if re.match(rf".*\/{CERTBOT_DOMAIN}\/.*", crt_list_name):
+        if re.match(rf".*/{CERTBOT_DOMAIN}/.*", crt_list_name):
             crt_list = haproxy.show_ssl_crt_list(crt_list_name)
 
             crt_list_data = ""
