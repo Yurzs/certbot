@@ -25,9 +25,11 @@ global
     stats socket :9999 level admin expose-fd listeners
 
 frontend https
-    bind *:443 ssl crt-list /usr/local/etc/haproxy/crts/crt_list.txt
+    bind *:443 ssl crt-list "/usr/local/etc/haproxy/crts/$DOMAIN_NAME/crt_list.txt"
     ...
 ```
+
+**Note**: `$DOMAIN_NAME` real domain name must be present in folder name.
 
 If you don't have a cert container is building one on entrypoint.
 It's located at `/etc/letsencrypt/dummy.pem` and you can use it in your haproxy configuration.
@@ -43,14 +45,14 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./crts:/usr/local/etc/haproxy/crts:ro
+      - "./crts:/usr/local/etc/haproxy/$DOMAIN_NAME/crts:ro"
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 
   certbot:
     image: ghcr.io/yurzs/certbot:master
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - ./crts:/usr/local/etc/haproxy/crts
+      - "./crts:/usr/local/etc/haproxy/$DOMAIN_NAME/crts:ro"
 ```
 
 If your container with haproxy is named not `haproxy` you need to specify env variable to 
@@ -68,5 +70,5 @@ If you want to manually combine the cert and key, you can use the following comm
 running certbot container:
 
 ```bash
-docker compose exec -it <cerbot_container_name> CERTBOT_DOMAIN=<your_domain> haproxy-hook
+docker compose exec -it <cerbot_container_name> -e CERTBOT_DOMAIN=<your_domain> haproxy-hook
 ```
