@@ -7,3 +7,6 @@ RUN chmod +rx /etc/letsencrypt/renewal-hooks/post/haproxy
 RUN chmod -w /etc/letsencrypt/renewal-hooks/post/haproxy
 
 RUN ln -s /etc/letsencrypt/renewal-hooks/post/haproxy /usr/bin/haproxy-hook
+
+ENTRYPOINT ["/bin/sh", "-c"]
+CMD ["certbot"]
