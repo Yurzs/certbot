@@ -2,6 +2,7 @@
 import os
 import re
 import socket
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from typing import List
@@ -94,7 +95,8 @@ def main() -> None:
 
             for cert in crt_list:
                 if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
-                    runtime_cert_path = cert_folder.joinpath("haproxy.runtime.pem")
+                    runtime_cert = f"haproxy.runtime.{int(time.time())}.pem"
+                    runtime_cert_path = cert_folder.joinpath(runtime_cert)
 
                     haproxy.add_cert(str(runtime_cert_path), combined_cert)
                     haproxy.add_cert_to_list(crt_list_name, str(runtime_cert_path), CERTBOT_DOMAIN)
