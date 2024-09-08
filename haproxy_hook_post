@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import socket
 from contextlib import contextmanager
 from pathlib import Path
@@ -86,24 +87,25 @@ def main() -> None:
         f.write(combined_cert)
 
     for crt_list_name in haproxy.show_ssl_crt_list():
-        crt_list = haproxy.show_ssl_crt_list(crt_list_name)
+        if re.match(rf".*\/{CERTBOT_DOMAIN}\/.*", crt_list_name):
+            crt_list = haproxy.show_ssl_crt_list(crt_list_name)
 
-        crt_list_data = ""
+            crt_list_data = ""
 
-        for cert in crt_list:
-            if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
-                runtime_cert_path = cert_folder.joinpath("haproxy.runtime.pem")
+            for cert in crt_list:
+                if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
+                    runtime_cert_path = cert_folder.joinpath("haproxy.runtime.pem")
 
-                haproxy.add_cert(str(runtime_cert_path), combined_cert)
-                haproxy.add_cert_to_list(crt_list_name, str(runtime_cert_path), CERTBOT_DOMAIN)
+                    haproxy.add_cert(str(runtime_cert_path), combined_cert)
+                    haproxy.add_cert_to_list(crt_list_name, str(runtime_cert_path), CERTBOT_DOMAIN)
 
-                crt_list_data += f"{cert_path}\n"
-            else:
-                crt_list_data += f"{cert}\n"
+                    crt_list_data += f"{cert_path}\n"
+                else:
+                    crt_list_data += f"{cert}\n"
 
-        if crt_list != crt_list_data:
-            with open(crt_list_name, "w") as f:
-                f.write(crt_list_data)
+            if crt_list != crt_list_data:
+                with open(crt_list_name, "w") as f:
+                    f.write(crt_list_data)
 
     print("Done!")
 
