@@ -1,7 +1,7 @@
 #!/bin/sh
 
 CRT_LIST_PATH="/usr/local/etc/haproxy/crts/crt.list"
-DUMMY_CERT_PATH="/etc/letsencrypt/dummy.pem"
+DUMMY_CERT_PATH="/etc/letsencrypt/dummy/dummy.pem"
 
 # Create a dummy pem file if it doesn't exist
 if ! test -f "$DUMMY_CERT_PATH"; then

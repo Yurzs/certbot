@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import List
 
 
-CRT_LIST_PATH = os.environ.get("CRT_LIST_PATH", "/usr/local/etc/haproxy/crts/")
-DUMMY_CERT_PATH = os.environ.get("DUMMY_CERT_PATH", "/etc/letsencrypt/dummy.pem")
+CRT_LIST_PATH = os.environ.get("CRT_LIST_PATH", "/usr/local/etc/haproxy/crts/crt.list")
+DUMMY_CERT_PATH = os.environ.get("DUMMY_CERT_PATH", "/etc/letsencrypt/dummy/dummy.pem")
 CERTBOT_DOMAIN = os.environ["CERTBOT_DOMAIN"]
 
 
