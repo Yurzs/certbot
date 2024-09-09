@@ -71,5 +71,5 @@ If you want to manually combine the cert and key, you can use the following comm
 running certbot container:
 
 ```bash
-docker compose exec -it <cerbot_container_name> -e CERTBOT_DOMAIN=<your_domain> haproxy-hook
+docker compose exec -it -e CERTBOT_DOMAIN=<your_domain> <cerbot_container_name> haproxy-hook
 ```
