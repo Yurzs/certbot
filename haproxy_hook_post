@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import re
 import socket
 import time
 from contextlib import contextmanager
@@ -8,8 +7,9 @@ from pathlib import Path
 from typing import List
 
 
+CRT_LIST_PATH = os.environ["CRT_LIST_PATH"]
 CERTBOT_DOMAIN = os.environ["CERTBOT_DOMAIN"]
-DUMMY_CERT_PATH = "/etc/letsencrypt/dummy.pem"
+DUMMY_CERT_PATH = os.environ["DUMMY_CERT_PATH"]
 
 
 class HaproxyRuntimeAPIClient:
@@ -87,27 +87,25 @@ def main() -> None:
     with open(cert_path, "w") as f:
         f.write(combined_cert)
 
-    for crt_list_name in haproxy.show_ssl_crt_list():
-        if re.match(rf".*/{CERTBOT_DOMAIN}/.*", crt_list_name):
-            crt_list = haproxy.show_ssl_crt_list(crt_list_name)
+    crt_list = haproxy.show_ssl_crt_list(CRT_LIST_PATH)
 
-            crt_list_data = ""
+    crt_list_data = ""
 
-            for cert in crt_list:
-                if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
-                    runtime_cert = f"haproxy.runtime.{int(time.time())}.pem"
-                    runtime_cert_path = cert_folder.joinpath(runtime_cert)
+    for cert in crt_list:
+        if cert.startswith(str(cert_path)) or cert == DUMMY_CERT_PATH:
+            runtime_cert = f"haproxy.runtime.{int(time.time())}.pem"
+            runtime_cert_path = cert_folder.joinpath(runtime_cert)
 
-                    haproxy.add_cert(str(runtime_cert_path), combined_cert)
-                    haproxy.add_cert_to_list(crt_list_name, str(runtime_cert_path), CERTBOT_DOMAIN)
+            haproxy.add_cert(str(runtime_cert_path), combined_cert)
+            haproxy.add_cert_to_list(CRT_LIST_PATH, str(runtime_cert_path), CERTBOT_DOMAIN)
 
-                    crt_list_data += f"{cert_path}\n"
-                else:
-                    crt_list_data += f"{cert}\n"
+            crt_list_data += f"{cert_path}\n"
+        else:
+            crt_list_data += f"{cert}\n"
 
-            if crt_list != crt_list_data:
-                with open(crt_list_name, "w") as f:
-                    f.write(crt_list_data)
+    if crt_list != crt_list_data:
+        with open(CRT_LIST_PATH, "w") as f:
+            f.write(crt_list_data)
 
     print("Done!")
 

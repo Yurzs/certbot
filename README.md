@@ -25,11 +25,12 @@ global
     stats socket :9999 level admin expose-fd listeners
 
 frontend https
-    bind *:443 ssl crt-list "/usr/local/etc/haproxy/crts/$DOMAIN_NAME/crt_list.txt"
+    bind *:443 ssl crt-list /usr/local/etc/haproxy/crts/crt.list
     ...
 ```
 
-**Note**: `$DOMAIN_NAME` real domain name must be present in folder name.
+Use `/usr/local/etc/haproxy/crts/crt.list` for all frontends.
+Certs are smartly picked by domain name in each frontend.
 
 If you don't have a cert container is building one on entrypoint.
 It's located at `/etc/letsencrypt/dummy.pem` and you can use it in your haproxy configuration.
@@ -45,14 +46,14 @@ services:
       - "443:443"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - "./crts:/usr/local/etc/haproxy/$DOMAIN_NAME/crts:ro"
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - $PWD/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - $PWD/crts:/usr/local/etc/haproxy/crts/
 
   certbot:
     image: ghcr.io/yurzs/certbot:master
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt
-      - "./crts:/usr/local/etc/haproxy/$DOMAIN_NAME/crts:ro"
+      - $PWD/crts:/usr/local/etc/haproxy/crts/
 ```
 
 If your container with haproxy is named not `haproxy` you need to specify env variable to 
