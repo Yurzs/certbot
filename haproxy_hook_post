@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import List
 
 
-CRT_LIST_PATH = os.environ["CRT_LIST_PATH"]
+CRT_LIST_PATH = os.environ.get("CRT_LIST_PATH", "/usr/local/etc/haproxy/crts/")
+DUMMY_CERT_PATH = os.environ.get("DUMMY_CERT_PATH", "/etc/letsencrypt/dummy.pem")
 CERTBOT_DOMAIN = os.environ["CERTBOT_DOMAIN"]
-DUMMY_CERT_PATH = os.environ["DUMMY_CERT_PATH"]
 
 
 class HaproxyRuntimeAPIClient:
